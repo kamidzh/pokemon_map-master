@@ -41,8 +41,8 @@ def show_all_pokemons(request):
             photo
         )
     pokemons_on_page = []
-    pokemons_m = Pokemon.objects.all()
-    for pokemon in pokemons_m:
+    pokemons = Pokemon.objects.all()
+    for pokemon in pokemons:
         pokemon_description = {
             'pokemon_id' : pokemon.id,
             'title_ru' : pokemon.title
