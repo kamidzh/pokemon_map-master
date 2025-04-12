@@ -31,10 +31,7 @@ def add_pokemon(folium_map, lat, lon, image_url=DEFAULT_IMAGE_URL):
 def show_all_pokemons(request):
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
     for pokemon_entity in PokemonEntity.objects.filter(appeared_at__lt=localtime(), disappeared_at__gt=localtime()):
-        if pokemon_entity.pokemon.photo:
-            photo = request.build_absolute_uri(pokemon_entity.pokemon.photo.url)
-        else:
-            photo = DEFAULT_IMAGE_URL
+        photo = request.build_absolute_uri(pokemon_entity.pokemon.photo.url)
         add_pokemon(
             folium_map, pokemon_entity.lat,
             pokemon_entity.lon,
@@ -45,12 +42,9 @@ def show_all_pokemons(request):
     for pokemon in pokemons:
         pokemon_description = {
             'pokemon_id' : pokemon.id,
-            'title_ru' : pokemon.title
+            'title_ru' : pokemon.title,
+            'img_url' : request.build_absolute_uri(pokemon.photo.url)
         }
-        if pokemon.photo:
-            pokemon_description['img_url'] = request.build_absolute_uri(pokemon.photo.url)
-        else:
-            pokemon_description['img_url'] = DEFAULT_IMAGE_URL
         pokemons_on_page.append(pokemon_description)
 
 
@@ -69,44 +63,32 @@ def show_pokemon(request, pokemon_id):
         'title_en' : requested_pokemon.title_en,
         'title_jp' : requested_pokemon.title_jp,
         'description' : requested_pokemon.description,
+        'img_url' : request.build_absolute_uri(requested_pokemon.photo.url)
     }
+
     previous_evolution = requested_pokemon.previous_evolution
     if previous_evolution:
         pokemon_description['previous_evolution'] = {
             'title_ru' : previous_evolution.title,
-            'pokemon_id' : previous_evolution.id
+            'pokemon_id' : previous_evolution.id,
+            'img_url' : request.build_absolute_uri(previous_evolution.photo.url)
         }
-        if previous_evolution.photo:
-            pokemon_description['previous_evolution']['img_url'] = request.build_absolute_uri(previous_evolution.photo.url)
-        else:
-            pokemon_description['previous_evolution']['img_url'] = DEFAULT_IMAGE_URL
-    next_evolutions = requested_pokemon.next_evolutions.all()
-    if next_evolutions:
-        next_pokemon = next_evolutions[0]
+
+    next_evolution = requested_pokemon.next_evolutions.first()
+    if next_evolution:
         pokemon_description['next_evolution'] = {
-            'title_ru' : next_pokemon.title,
-            'pokemon_id' : next_pokemon.id
+            'title_ru' : next_evolution.title,
+            'pokemon_id' : next_evolution.id,
+            'img_url' : request.build_absolute_uri(next_evolution.photo.url)
         }
-        if next_pokemon.photo:
-            pokemon_description['next_evolution']['img_url'] = request.build_absolute_uri(next_pokemon.photo.url)
-        else:
-            pokemon_description['next_evolution']['img_url'] = DEFAULT_IMAGE_URL
-    if requested_pokemon.photo:
-        pokemon_description['img_url'] = request.build_absolute_uri(requested_pokemon.photo.url)
-    else:
-        pokemon_description['img_url'] = DEFAULT_IMAGE_URL
-    
+
     pokemon_entitites = PokemonEntity.objects.filter(pokemon=requested_pokemon)
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
     for pokemon_entity in pokemon_entitites:
-        if pokemon_entity.pokemon.photo:
-            photo = request.build_absolute_uri(pokemon_entity.pokemon.photo.url)
-        else:
-            photo = DEFAULT_IMAGE_URL
         add_pokemon(
             folium_map, pokemon_entity.lat,
             pokemon_entity.lon,
-            photo
+            request.build_absolute_uri(requested_pokemon.photo.url)
         )
 
     return render(request, 'pokemon.html', context={
